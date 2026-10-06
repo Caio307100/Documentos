@@ -5,12 +5,15 @@ const principal = document.querySelector("main").querySelector(".principal")
 const codigo = "7392-KX47-PL91"
 const col1 = document.querySelector(".col1")
 let jogos = []
+let botaoEnviar = document.createElement("button")
+let mensagemAnterior
+let form = document.createElement("form")
 class Jogos {
     constructor(nome, img) {
         this.nome = nome
         this.img = img
     }
-    cartaz(){
+    card(){
         this.nome = this.nome
         let div = document.createElement("div")
         div.className = "jogo"
@@ -18,8 +21,22 @@ class Jogos {
         img.src = this.img
         let h2 = document.createElement("h2")
         h2.innerText = this.nome
+        let formJogar = document.createElement("form")
+        formJogar.method = "GET"
+        let span = document.createElement("span")
+        span.innerText = this.nome
+        span.style.opacity = "0%"
+        span.style.cursor = "none"
+        let button = document.createElement("button")
+        button.innerText = "Jogar"
+        button.type = "submit"
+
+        formJogar.appendChild(span)
+        formJogar.appendChild(button)
         div.appendChild(img)
         div.appendChild(h2)
+        div.appendChild(formJogar)
+
         principal.appendChild(div)
     }
 }
@@ -59,6 +76,7 @@ function adicionar(mensagem){
         let INPUT = document.createElement("input")
         INPUT.id = "nome"
         let pnEncontrado = false
+        let botao
         for (elemento of ALLmensagem){
             if (elemento.tagName == "H2"){
                 elemento.innerText = "Adicionar jogo"
@@ -68,9 +86,11 @@ function adicionar(mensagem){
             }
             if (elemento.tagName == "BUTTON"){
                 elemento.onclick = () => {
-                    verificarAdicao(INPUT, inputImg)
+                    verificarAdicao(INPUT, inputImg, mensagem)
                 }
                 elemento.innerText = "Adicionar"
+                botao = elemento
+                botao.remove()
             }
             if (elemento.tagName == "INPUT"){
                 elemento.value = ""
@@ -92,26 +112,41 @@ function adicionar(mensagem){
         p.innerText = "Digite o (local ou url) da imagem"
         mensagem.insertBefore(INPUT, mensagem.children[2])
         mensagem.insertBefore(p, mensagem.children[3])
+        mensagem.insertBefore(botao, mensagem.children[mensagem.length])
         secundario.appendChild(mensagem)
     }
 }
-function verificarAdicao(INPUT, inputImg) {
+function verificarAdicao(INPUT, inputImg, mensagem) {
     if (INPUT.value == "" || inputImg.value == ""){
         alert("Está vazio um dos campos")
     }
     else{
         let nome = INPUT.value.toLowerCase()
         let Pletra = nome[0].toUpperCase()
+        mensagemAnterior = mensagem.cloneNode(true)
+        mensagem.innerHTML = ""
         nome = nome.replace(nome[0], "")
         nome = `${Pletra}${nome}`
         jogos.push(new Jogos(nome, inputImg.value))
         principal.innerHTML = ""
         for (jogo of jogos){
-            jogo.cartaz()
+            jogo.card()
         }
-        secundario.innerHTML = ""
-        document.querySelector("header").style.opacity = "100%"
-        document.querySelector(".principal").style.opacity = "100%"
+
+        let pE = document.createElement("p")
+        pE.innerText = "Endereço do jogo"
+        pE.style.color = "white"
+        let inputE = document.createElement("input")
+        inputE.placeholder = "Exemplo: /pasta/jogo.exe"
+        inputE.id = "endereco"
+        botaoEnviar.type = "submit"
+        botaoEnviar.innerText = "Guardar endereço do jogo"
+        botaoEnviar.dataset.nome = nome
+        botaoEnviar.dataset.img = inputImg.value
+        form.appendChild(pE)
+        form.appendChild(inputE)
+        form.appendChild(botaoEnviar)
+        mensagem.insertBefore(form, mensagem.children[4])
     }
 }
 botaoExtras.addEventListener("click", () => {
@@ -139,4 +174,21 @@ botaoExtras.addEventListener("click", () => {
     mensagem.appendChild(botaoVerificarCodigo)
     secundario.appendChild(mensagem)
 })
-
+form.addEventListener("submit", (evento) => {
+  evento.preventDefault()
+  let botaoClicado = evento.submitter
+  let endereco = form.querySelector("#endereco").value
+  let nome = botaoClicado.dataset.nome
+  let img = botaoClicado.dataset.img
+  fetch("http://localhost:3000/jogos", {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        nome: nome,
+        endereco: endereco,
+        img:img
+      })
+  })
+})
