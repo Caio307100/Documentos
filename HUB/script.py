@@ -1,12 +1,16 @@
 from flask import *
-import subprocess
+from subprocess import *
 app = Flask(__name__)
+jogos = {}
+cat = run(["cat", "db.json"], capture_output=True, text=True)
+if cat.stderr == "":
+    pass
+else:
+    run(["touch", "db.json"])
 
 @app.route("/", methods=["POST", "GET"])
-def home():
-    if request.method == "POST":
-        subprocess.run("c:\\Users\\fcpla\\Downloads\\granny-legacy-offline-v1.9.1\\Granny Legacy Offline v1.9.1\\Play Granny Legacy x64.exe")
+def index():
     return render_template(
-        ["index.html"]
+        "index.html"
     )
 app.run()
